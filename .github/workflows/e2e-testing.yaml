@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   e2e:
@@ -18,18 +21,6 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: 18
-
-    - name: Install Dependencies
-      run: npm install
-
-    - name: Build NestJS Application
-      run: npm run build
-
-    - name: Start NestJS Application
-      run: npm run start:prod
-
-    - name: Wait for Application to Start
-      run: sleep 10
 
     - name: Run E2E Tests
       run: npm run test:e2e
