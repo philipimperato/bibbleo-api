@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersModule } from './app/users/users.module';
 import sequelizeConfig from './sequelize.config';
 import { AuthModule } from './app/auth/auth.module';
@@ -12,6 +13,12 @@ import { AuthController } from './app/auth/auth.controller';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [sequelizeConfig],
+    }),
+    SequelizeModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) =>
+        configService.get('database'),
+      inject: [ConfigService],
     }),
     UsersModule,
     AuthModule,
