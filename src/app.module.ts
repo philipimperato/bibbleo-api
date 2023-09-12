@@ -12,12 +12,23 @@ import { AuthController } from './app/auth/auth.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true,
       load: [sequelizeConfig],
     }),
     SequelizeModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) =>
-        configService.get('database'),
+      useFactory: async () => {
+        return {
+          dialect: 'postgres',
+          host: 'localhost',
+          port: 5433,
+          username: 'postgres',
+          password: 'e2e@testdb',
+          database: 'postgres',
+          autoLoadModels: true,
+          synchronize: true,
+        };
+      },
       inject: [ConfigService],
     }),
     UsersModule,
@@ -26,9 +37,4 @@ import { AuthController } from './app/auth/auth.controller';
   controllers: [AppController, AuthController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    // insure $limit/$skip are populated
-    consumer.apply(DefaultQueryPagination).forRoutes('*');
-  }
-}
+export class AppModule {}

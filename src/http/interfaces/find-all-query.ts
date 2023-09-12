@@ -4,9 +4,9 @@ import { IsInt } from 'class-validator';
 export default class FindAllQuery {
   @IsInt()
   @Type(() => Number)
-  $limit: number;
+  $limit: number = 10;
 
   @IsInt()
   @Type(() => Number)
-  $skip: number;
+  $skip: number = 1;
 }

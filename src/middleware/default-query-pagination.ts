@@ -10,6 +10,8 @@ export class DefaultQueryPagination implements NestMiddleware {
     // want to insure there this is a find requests "**/"
     const hasNoParams = Object.keys(req.params).length > 0;
 
+    console.log('-------------------- testig if htis is getting hit');
+
     if (isGet && hasNoParams) {
       const { $limit, $skip, ...queryValues } = req.query;
 

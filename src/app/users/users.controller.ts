@@ -30,9 +30,7 @@ export class UsersController {
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     const { password } = createUserDto;
-
     createUserDto.password = await bcrypt.hash(password, 10);
-
     return this.usersService.create(createUserDto);
   }
 
