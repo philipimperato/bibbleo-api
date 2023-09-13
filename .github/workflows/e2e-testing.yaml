@@ -41,6 +41,3 @@ jobs:
 
     - name: Run E2E Tests
       run: npm run test:e2e
-
-    - name: Stop NestJS Application
-      run: npm run stop
