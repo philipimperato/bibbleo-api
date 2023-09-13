@@ -17,6 +17,7 @@ jobs:
       postgres:
         image: postgres
         env:
+          POSTGRES_HOST: localhost
           POSTGRES_PASSWORD: e2e@testdb
         options: >-
           --health-cmd pg_isready
