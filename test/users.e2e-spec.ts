@@ -19,14 +19,6 @@ describe('Users e2e', () => {
     lastname: 'User',
   };
 
-  const createdUser = expect.objectContaining({
-    ...user,
-    password: expect.not.stringMatching('testuser'),
-    status: expect.stringMatching('active'),
-    createdAt: expect.anything(),
-    updatedAt: expect.anything(),
-  });
-
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
