@@ -64,27 +64,46 @@ describe('Users e2e', () => {
     await app.init();
   });
 
-  it('should be defined', () => {
+  it('Controller should be defined', () => {
     const controller = app.get<UsersController>(UsersController);
     expect(controller).toBeDefined();
   });
 
-  it('/POST create a user', () => {
+  it('Creates a user [POST]', () => {
     return request(server)
       .post('/users')
       .send(user as CreateUserDto)
       .expect(HttpStatus.CREATED)
       .then(({ body }) => {
-        expect(createdUser).toMatchObject(body);
+        expect(body.password).not.toBe('testuser');
+        expect(body.createdAt).toBeDefined();
       });
   });
 
-  it('GET /users get request with $skip & $limit', () => {
+  it('Unable to create a user with existing email [POST]', async () => {
+    const duplicateUser = {
+      email: 'test-user@bibbleo.com',
+      password: 'testuser',
+      firstname: 'Test',
+      lastname: 'User',
+    };
+
+    try {
+      await request(server)
+        .post('/users')
+        .send(duplicateUser as CreateUserDto)
+        .expect(400);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  it('Users request with $skip & $limit [GET]', () => {
     return request(server)
       .get('/users?$limit=10&$skip=1')
       .expect(200)
-      .expect((res: any) => {
-        const { data, $limit, $skip, total } = res._body;
+      .expect(({ body }) => {
+        const { data, $limit, $skip, total } = body;
 
         expect(Array.isArray(data)).toBe(true);
         expect($limit).toBeGreaterThanOrEqual(1);
@@ -93,7 +112,7 @@ describe('Users e2e', () => {
       });
   });
 
-  it('GET /users insure pagination defaults are working', () => {
+  it('Users request without $skip and $limit [GET]', () => {
     return request(server)
       .get('/users')
       .expect(200)

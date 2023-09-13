@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/sequelize';
@@ -15,7 +15,16 @@ export class UsersService {
   ) {}
 
   create(createDto: CreateUserDto): Promise<any> {
-    return this.$repo.create({ ...createDto });
+    return this.$repo.create({ ...createDto }).catch((e) => {
+      const { name } = e;
+
+      if (name === 'SequelizeUniqueConstraintError') {
+        throw new BadRequestException('Email Is not unique', {
+          cause: new Error(),
+          description: 'User already exists',
+        });
+      }
+    });
   }
 
   findAll({ $limit, $skip, ...where }) {
