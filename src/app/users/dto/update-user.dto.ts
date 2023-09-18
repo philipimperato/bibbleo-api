@@ -6,6 +6,7 @@ export class UpdateUserDto extends PickType(CreateUserDto, [
   'email',
   'firstname',
   'lastname',
+  'refreshToken',
 ] as const) {
   @IsTruthyOnDefined()
   email: string;
@@ -17,5 +18,5 @@ export class UpdateUserDto extends PickType(CreateUserDto, [
   lastname: string;
 
   @IsTruthyOnDefined()
-  age: number;
+  refreshToken: string;
 }

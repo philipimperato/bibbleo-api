@@ -1,4 +1,4 @@
-import { IsDefined, IsEmail } from 'class-validator';
+import { IsDefined, IsEmail, IsOptional } from 'class-validator';
 import IsTruthy from '../../../validation/is-truthy';
 
 export class CreateUserDto {
@@ -13,4 +13,7 @@ export class CreateUserDto {
 
   @IsTruthy()
   lastname: string;
+
+  @IsOptional()
+  refreshToken: string;
 }

@@ -8,5 +8,5 @@ export default class FindAllQuery {
 
   @IsInt()
   @Type(() => Number)
-  $skip: number = 1;
+  $skip: number = 0;
 }

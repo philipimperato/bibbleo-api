@@ -5,25 +5,34 @@ import { AppService } from './app.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersModule } from './app/users/users.module';
 import sequelizeConfig from './sequelize.config';
-import { AuthModule } from './app/auth/auth.module';
 import { AuthController } from './app/auth/auth.controller';
+import { AuthModule } from './app/auth/auth.module';
+import configuration from './config/configuration';
+import { APP_GUARD } from '@nestjs/core';
+import { GlobalAuthGuard } from './guards/global.auth.guard';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [sequelizeConfig],
+      load: [configuration, sequelizeConfig],
     }),
     SequelizeModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) =>
-        configService.get('database'),
+        configService.get('development'),
       inject: [ConfigService],
     }),
     UsersModule,
     AuthModule,
   ],
   controllers: [AppController, AuthController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: GlobalAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

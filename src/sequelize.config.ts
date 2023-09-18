@@ -1,7 +1,7 @@
 import { Dialect } from 'sequelize/types';
 
 export default () => ({
-  database: {
+  development: {
     dialect: 'postgres' as Dialect,
     host: process.env.DATABASE_HOST,
     port: parseInt(process.env.DATABASE_PORT, 10) || 5432,

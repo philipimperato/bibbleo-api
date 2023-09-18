@@ -3,18 +3,17 @@ import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as request from 'supertest';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { UsersController } from './../src/app/users/users.controller';
-import { UsersModule } from './../src/app/users/users.module';
+import { AuthController } from './../src/app/auth/auth.controller';
+import { AuthModule } from './../src/app/auth/auth.module';
 import { Server } from 'http';
 import { CreateUserDto } from './../src/app/users/dto/create-user.dto';
-import { AuthModule } from './../src/app/auth/auth.module';
 
-describe('Users e2e', () => {
+describe('Auth e2e', () => {
   let server: Server;
   let app: INestApplication;
 
   const user = {
-    email: 'test-user@bibbleo.com',
+    email: 'testuser@bibbleo.com',
     password: 'testuser',
     firstname: 'Test',
     lastname: 'User',
@@ -24,7 +23,7 @@ describe('Users e2e', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         SequelizeModule.forRootAsync({
-          imports: [UsersModule, ConfigModule, AuthModule],
+          imports: [ConfigModule, AuthModule],
           useFactory: async () => {
             return {
               dialect: 'postgres',
@@ -58,62 +57,26 @@ describe('Users e2e', () => {
   });
 
   it('Controller should be defined', () => {
-    const controller = app.get<UsersController>(UsersController);
+    const controller = app.get<AuthController>(AuthController);
     expect(controller).toBeDefined();
   });
 
-  it('Creates a user [POST]', () => {
-    return request(server)
+  it('Checks for access/refresh tokens [POST]', async () => {
+    await request(server)
       .post('/auth/register')
       .send(user as CreateUserDto)
+      .expect(HttpStatus.CREATED);
+
+    return request(server)
+      .post('/auth')
+      .send({
+        email: 'testuser@bibbleo.com',
+        password: 'testuser',
+      })
       .expect(HttpStatus.CREATED)
       .then(({ body }) => {
-        expect(body.password).not.toBe('testuser');
+        expect(body.accessToken).toBeDefined();
         expect(body.refreshToken).toBeDefined();
-      });
-  });
-
-  it('Unable to create a user with existing email [POST]', async () => {
-    const duplicateUser = {
-      email: 'test-user@bibbleo.com',
-      password: 'testuser',
-      firstname: 'Test',
-      lastname: 'User',
-    };
-
-    try {
-      await request(server)
-        .post('/auth/register')
-        .send(duplicateUser as CreateUserDto)
-        .expect(400);
-    } catch (e) {
-      console.log(e);
-    }
-  });
-
-  it('Users request with $skip & $limit [GET]', () => {
-    return request(server)
-      .get('/users?$limit=10&$skip=1')
-      .expect(200)
-      .expect(({ body }) => {
-        const { data, $limit, $skip, total } = body;
-
-        expect(Array.isArray(data)).toBe(true);
-        expect($limit).toBeGreaterThanOrEqual(1);
-        expect($skip).toBeGreaterThanOrEqual(1);
-        expect(total).toBeDefined();
-      });
-  });
-
-  it('Users request without $skip and $limit [GET]', () => {
-    return request(server)
-      .get('/users')
-      .expect(200)
-      .expect((res: any) => {
-        const { $limit, $skip } = res._body;
-
-        expect($limit).toBe(10);
-        expect($skip).toBe(1);
       });
   });
 

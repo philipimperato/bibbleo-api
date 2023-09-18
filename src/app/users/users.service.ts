@@ -7,24 +7,32 @@ import _IFindParams from '../../http/interfaces/_find-params';
 
 @Injectable()
 export class UsersService {
-  private readonly PK = 'userId';
+  public readonly PK = 'userId';
 
   constructor(
     @InjectModel(User)
     private readonly $repo: typeof User,
   ) {}
 
-  create(createDto: CreateUserDto): Promise<any> {
-    return this.$repo.create({ ...createDto }).catch((e) => {
-      const { name } = e;
+  create(createDto: CreateUserDto): Promise<void | User> {
+    return this.$repo
+      .create({ ...createDto }, { returning: true })
+      .catch((e) => {
+        const { name, message } = e;
 
-      if (name === 'SequelizeUniqueConstraintError') {
-        throw new BadRequestException('Email Is not unique', {
-          cause: new Error(),
-          description: 'User already exists',
-        });
-      }
-    });
+        switch (name) {
+          case 'SequelizeValidationError':
+            throw new BadRequestException('Email Is not unique', {
+              cause: new Error(),
+              description: message,
+            });
+          case 'SequelizeUniqueConstraintError':
+            throw new BadRequestException('Email Is not unique', {
+              cause: new Error(),
+              description: 'User already exists',
+            });
+        }
+      });
   }
 
   findAll({ $limit, $skip, ...where }) {
@@ -35,19 +43,30 @@ export class UsersService {
     });
   }
 
-  findOne(id: number) {
+  async findOne({ query: where }): Promise<User> {
+    const result = await this.$repo.findAndCountAll({ where });
+    const users = result.rows;
+    return (users.length ? users[0] : null) as User;
+  }
+
+  async _findOne({ query: where }) {
+    const result = await this.$repo
+      .scope('internal')
+      .findAndCountAll({ where });
+    const users = result.rows;
+    return (users.length ? users[0] : null) as User;
+  }
+
+  get(id: number) {
     return this.$repo.findByPk(id);
   }
 
-  // _findOne(5)
-  // _findOne(null, { query: { userId } })
-  // _findOne(null, { query: { $limit: 2 } })
-  _findOne(id: number | null, params: _IFindParams) {
+  _get(id: number | null, params?: _IFindParams) {
     const where = !id ? params.query : { [this.PK]: id };
     return this.$repo.scope('internal').findOne({ where });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  update(id: number, updateUserDto: Partial<UpdateUserDto>) {
     return this.$repo.update(
       { ...updateUserDto },
       { where: { [this.PK]: id }, returning: true },

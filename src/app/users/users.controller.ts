@@ -11,10 +11,9 @@ import {
   ValidationPipe,
   NotFoundException,
   UseInterceptors,
+  MethodNotAllowedException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import FindAllQuery from '../../http/interfaces/find-all-query';
 import FindAllResult from '../../http/interfaces/find-all-result';
@@ -25,13 +24,11 @@ import { FindOneInterceptor } from '../../http/interceptors/find-one';
 @UsePipes(new ValidationPipe({ transform: true }))
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private usersService: UsersService) {}
 
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    const { password } = createUserDto;
-    createUserDto.password = await bcrypt.hash(password, 10);
-    return this.usersService.create(createUserDto);
+  async create() {
+    throw new MethodNotAllowedException();
   }
 
   @Get()
@@ -43,7 +40,7 @@ export class UsersController {
   @Get(':id')
   @UseInterceptors(FindOneInterceptor<User>)
   findOne(@Param('id') id: string) {
-    const user = this.usersService.findOne(+id);
+    const user = this.usersService.get(+id);
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }

@@ -1,0 +1,82 @@
+// session.serializer.this
+import { PassportSerializer } from '@nestjs/passport';
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class SessionSerializer extends PassportSerializer {
+  serializeUser(user: any, done: any) {
+    done(null, user);
+  }
+
+  deserializeUser(payload: any, done: any) {
+    done(null, payload);
+  }
+}
+
+// main.ts
+import * as session from 'express-session';
+import { build } from './redis/redis.store';
+import { REDIS_OPTIONS } from 'src/redis/redis.constants';
+
+const { store } = await build();
+
+app.use(
+  session({
+    store,
+    secret: process.env.SESSION_SECRET,
+    ...REDIS_OPTIONS,
+  }),
+);
+
+app.use(passport.session());
+
+// redis/redis.contraints
+export const REDIS = Symbol('AUTH:REDIS');
+
+export const REDIS_OPTIONS = {
+  saveUninitialized: false,
+  resave: false,
+  cookie: {
+    domain: 'localhost:3000',
+    maxAge: 1000 * 60 * 60 * 1,
+    httpOnly: true,
+    secure: false,
+    sameSite: 'none',
+  },
+};
+
+// redis/redis.module.ts
+import { Module } from '@nestjs/common';
+import { REDIS } from './redis.constants';
+import { createClient } from 'redis';
+
+const client = createClient();
+
+@Module({
+  providers: [
+    {
+      provide: REDIS,
+      useValue: client,
+    },
+  ],
+  exports: [REDIS],
+})
+export class RedisModule {}
+
+// redis/redis.store.ts
+import { createClient } from 'redis';
+import RedisStore from 'connect-redis';
+
+export const build = async () => {
+  const client = createClient();
+  await client.connect();
+
+  return {
+    store: new RedisStore({ client }),
+    client,
+  };
+};
+
+// global.auth.guard.ts
+const request = context.switchToHttp().getRequest();
+return request.isAuthenticated();

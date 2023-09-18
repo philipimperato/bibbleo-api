@@ -11,7 +11,7 @@ import {
 
 @Scopes(() => ({
   defaultScope: {
-    attributes: { exclude: ['password'] },
+    attributes: { exclude: ['refreshToken', 'password'] },
   },
   internal: {},
 }))
@@ -34,4 +34,7 @@ export class User extends Model {
 
   @Column({ type: DataType.STRING, allowNull: false })
   lastname: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  refreshToken: string;
 }

@@ -1,0 +1,87 @@
+// configuration.ts
+export default () => ({
+  jwt: {
+    global: true,
+    secret: process.env.JWT_SECRET,
+    signOptions: { expiresIn: '60s' },
+  },
+});
+
+// auth.service.ts
+import { JwtService } from '@nestjs/jwt';
+
+constructor (private jwtService: JwtService)
+
+async login(payload: Partial<User>) {
+  return {
+    accessToken: this.jwtService.sign(payload),
+  };
+}
+
+// jwt.global.guard.ts
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
+import { IS_PUBLIC_KEY } from 'decorators/is-public';
+
+@Injectable()
+export class JwtGlobalGuard extends AuthGuard('jwt') {
+  constructor(private reflector: Reflector) {
+    super();
+  }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) return true;
+
+    return (await super.canActivate(context)) as boolean;
+  }
+}
+
+// jwt.strategy.ts
+import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET,
+    });
+  }
+
+  async validate(payload: any) {
+    return {
+      id: payload.id,
+      email: payload.email,
+    };
+  }
+}
+
+// auth.module.ts
+imports:
+  JwtModule.registerAsync({
+    imports: [ConfigModule],
+    useFactory: async (configService: ConfigService) =>
+      configService.get('jwt'),
+    inject: [ConfigService],
+  }),
+providers:
+  JwtStrategy
+
+// app.module.ts
+providers:
+  {
+    provide: APP_GUARD,
+    useClass: JwtGlobalGuard,
+  }
+
+//
+REDIS_URL=redis://localhost:6379
