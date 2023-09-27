@@ -74,7 +74,7 @@ export class AuthService {
         },
         {
           secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
-          expiresIn: '15m',
+          expiresIn: '30m',
         },
       ),
       this.jwtService.signAsync(
@@ -93,5 +93,9 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  logout(userId: number) {
+    this.usersService.update(userId, { refreshToken: null });
   }
 }

@@ -7,6 +7,7 @@ import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { User } from '../users/entities/user.model';
 import { RefreshTokenGuard } from './../../guards/refresh-token.guard';
+import { SessionRequest } from './session-request.dec';
 
 @Controller('auth')
 export class AuthController {
@@ -41,10 +42,15 @@ export class AuthController {
   @Public()
   @UseGuards(RefreshTokenGuard)
   @Get('refresh')
-  refreshTokens(@Req() req: any) {
+  refreshTokens(@Req() req: SessionRequest) {
     const userId = req.user.sub;
     const refreshToken = req.user.refreshToken;
 
     return this.authService.refreshTokens(userId, refreshToken);
+  }
+
+  @Get('logout')
+  logout(@Req() req: SessionRequest) {
+    this.authService.logout(req.user['sub']);
   }
 }
