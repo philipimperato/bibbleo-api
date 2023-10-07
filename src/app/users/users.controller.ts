@@ -28,6 +28,7 @@ export class UsersController {
 
   @Post()
   async create() {
+    // handled in the auth controller
     throw new MethodNotAllowedException();
   }
 

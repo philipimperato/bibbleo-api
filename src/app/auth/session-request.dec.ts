@@ -1,3 +1,7 @@
 export type SessionRequest = Request & {
-  user: { sub: number; refreshToken: string };
+  user: {
+    sub: number;
+    refreshToken: string;
+    email: string;
+  };
 };

@@ -8,6 +8,7 @@ import {
   AllowNull,
   Scopes,
 } from 'sequelize-typescript';
+import ROLES from './../../roles/roles';
 
 @Scopes(() => ({
   defaultScope: {
@@ -37,4 +38,17 @@ export class User extends Model {
 
   @Column({ type: DataType.STRING, allowNull: true })
   refreshToken: string;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  lastLoginAt: string;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  status: 'new' | 'active' | 'inactive' | 'archived';
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    defaultValue: ROLES.User,
+  })
+  roleId: string;
 }

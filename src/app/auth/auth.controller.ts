@@ -1,4 +1,12 @@
-import { Controller, Post, UseGuards, Body, Req, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Body,
+  Req,
+  Get,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Public } from './../../decorators/is-public';
 import { LocalAuthGuard } from './../../guards/local.auth.guard';
 import { AuthService } from './auth.service';
@@ -8,6 +16,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../users/entities/user.model';
 import { RefreshTokenGuard } from './../../guards/refresh-token.guard';
 import { SessionRequest } from './session-request.dec';
+import { ResetPasswordDto } from './dto/reset-password.dts';
 
 @Controller('auth')
 export class AuthController {
@@ -49,8 +58,27 @@ export class AuthController {
     return this.authService.refreshTokens(userId, refreshToken);
   }
 
+  @Post('reset-password')
+  async resetPassword(
+    @Body() resetData: ResetPasswordDto,
+    @Req() req: SessionRequest,
+  ) {
+    const { sub: userId, email } = req.user;
+    const { currentPassword, newPassword } = resetData;
+    const validUser = await this.authService.validateUser(
+      email,
+      currentPassword,
+    );
+
+    if (!validUser) throw new ForbiddenException('Session has expired');
+
+    const password = await bcrypt.has(newPassword, 10);
+    return this.usersService.update(userId, { password });
+  }
+
   @Get('logout')
   logout(@Req() req: SessionRequest) {
-    this.authService.logout(req.user['sub']);
+    const { sub: userId } = req.user;
+    this.authService.logout(userId);
   }
 }

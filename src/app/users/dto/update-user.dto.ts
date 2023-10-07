@@ -1,6 +1,7 @@
 import { PickType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
 import IsTruthyOnDefined from '../../../validation/is-truthy-on-defined';
+import { IsIn } from 'class-validator';
 
 export class UpdateUserDto extends PickType(CreateUserDto, [
   'email',
@@ -19,4 +20,10 @@ export class UpdateUserDto extends PickType(CreateUserDto, [
 
   @IsTruthyOnDefined()
   refreshToken: string;
+
+  @IsIn(['new', 'active', 'inactive', 'archived'])
+  status: string;
+
+  @IsTruthyOnDefined()
+  password: string;
 }
